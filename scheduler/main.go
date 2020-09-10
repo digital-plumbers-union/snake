@@ -1,25 +1,34 @@
 package main
 
 import (
+	"context"
 	"os"
+	"strconv"
 
+	constants "github.com/digital-plumbers-union/snake/scheduler/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update;watch
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update
+
+var (
+	buildNumber int
+	namespace   string
+)
 
 func init() {
 	log.SetLogger(zap.New())
+	namespace = os.Getenv("POD_NAMESPACE")
 }
 
 func main() {
@@ -33,32 +42,52 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Setup a new controller to reconcile our Build Number ConfigMap
-	entryLog.Info("Setting up controller")
-	c, err := controller.New("buildnum-controller", mgr, controller.Options{
-		Reconciler: &reconcileConfigMap{client: mgr.GetClient()},
-	})
+	buildNumber, err = initializeBuildNumber(mgr.GetClient(), namespace)
 	if err != nil {
-		entryLog.Error(err, "unable to set up individual controller")
+		entryLog.Error(err, "Failed to initialize the build number")
 		os.Exit(1)
 	}
-
-	// Watch ConfigMap and enqueue ConfigMap object key
-	if err := c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForObject{}); err != nil {
-		entryLog.Error(err, "unable to watch ConfigMap")
-		os.Exit(1)
+	if buildNumber == 0 {
+		entryLog.Info("Could not find the build number ConfigMap. Created the ConfigMap instead")
 	}
+	entryLog.Info("Initialized build number: ", buildNumber)
 
 	// Setup webhooks
 	entryLog.Info("setting up webhook server")
 	hookServer := mgr.GetWebhookServer()
 
 	entryLog.Info("registering webhooks to the webhook server")
-	hookServer.Register("/mutate-v1beta1-pipelinerun", &webhook.Admission{Handler: &pipelineRunAnnotator{Client: mgr.GetClient()}})
+	hookServer.Register("/mutate-v1beta1-pipelinerun", &webhook.Admission{Handler: &pipelineRunAnnotator{Client: mgr.GetClient(), Namespace: namespace, BuildNumber: buildNumber}})
 
 	entryLog.Info("starting manager")
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		entryLog.Error(err, "unable to run manager")
 		os.Exit(1)
 	}
+}
+
+func initializeBuildNumber(client client.Client, namespace string) (int, error) {
+	// Fetch the ConfigMap from the cache
+	cm := &corev1.ConfigMap{}
+	err := client.Get(context.Background(), types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: namespace}, cm)
+
+	if err != nil {
+		// configMap not found, creating it
+		configData := make(map[string]string)
+		configData[constants.BuildNumberKey] = "0"
+		newCm := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      constants.BuildNumberConfigMap,
+				Namespace: namespace,
+			},
+			Data: configData,
+		}
+		if err := client.Create(context.Background(), newCm); err != nil {
+			return 0, err
+		}
+		return strconv.Atoi(configData[constants.BuildNumberKey])
+	}
+
+	// otherwise we found the configmap, attempt to parse the build number
+	return strconv.Atoi(cm.Data[constants.BuildNumberKey])
 }
