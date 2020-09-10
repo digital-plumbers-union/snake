@@ -18,10 +18,13 @@ import (
 
 // +kubebuilder:webhook:path=/mutate-v1beta1-pipelinerun,mutating=true,failurePolicy=fail,groups=tekton.dev,resources=pipelineruns,verbs=create,versions=v1beta1,name=scheduler.snake.dpu.sh,sideEffects=some
 
-// pipelineRunAnnotator annotates Pods
+// pipelineRunAnnotator annotates PipelineRuns
 type pipelineRunAnnotator struct {
-	Client  client.Client
-	decoder *admission.Decoder
+	Client      client.Client
+	decoder     *admission.Decoder
+	BuildNumber int
+	// the namespace the server is deployed into, used to access/update the configmap
+	Namespace string
 }
 
 // pipelineRunAnnotator generates a build number for pipelineruns with a specific annotation
@@ -41,21 +44,29 @@ func (a *pipelineRunAnnotator) Handle(ctx context.Context, req admission.Request
 
 	// increment build, convert to string
 	a.BuildNumber = a.BuildNumber + 1
-	// TODO: make sure labels exist (?)
-	// add the incremented build number as a label
-	run.Labels[constants.BuildNumberLabel] = strconv.Itoa(a.BuildNumber)
-	// extract build from configMap and annotate it
+	strBuildNumber := strconv.Itoa(a.BuildNumber)
+	// TODO: make sure labels object exists on our PRun (?)
+	// add the incremented build number as a label to our PipelineRun
+	run.Labels[constants.BuildNumberLabel] = strBuildNumber
+
+	// update the configmap storing the build number
+	// get configmap
 	buildNumberConfigMap := &corev1.ConfigMap{}
-	if err := a.Client.Get(ctx, types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: run.ObjectMeta.Namespace}, buildNumberConfigMap); err != nil {
+	if err := a.Client.Get(ctx, types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: a.Namespace}, buildNumberConfigMap); err != nil {
 		// configMap not found error
 		return admission.Errored(1, err)
 	}
 
-	buildNumber := buildNumberConfigMap.Data[constants.BuildNumberKey]
-	// update the annotation
-	run.Annotations["snake.blockheads.info/build-number"] = buildNumber
-	// update the env variables
+	// update the key storing the build number
+	buildNumberConfigMap.Data[constants.BuildNumberKey] = strBuildNumber
 
+	// update the configmap
+	if err := a.Client.Update(ctx, buildNumberConfigMap); err != nil {
+		// failed to update configMap error
+		return admission.Errored(1, err)
+	}
+
+	// marshal our modified PipelineRun so we can return the patch
 	marshaledRun, err := json.Marshal(run)
 	if err != nil {
 		return admission.Errored(http.StatusInternalServerError, err)
