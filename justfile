@@ -2,16 +2,14 @@
 setup:
   hack/tools/install.sh
 
-# cleans workspace
-clean:
+# cleans workspace, deletes kind clusters
+clean: kind-down
   bazel clean --expunge
   rm -rf bin/
 
-# cleans workspace, deletes clusters,
-refresh: clean setup kind-down
+# cleans workspace, reinstalls tools
+refresh: clean setup
 
-# NOTE: first command is default command
-# (i.e., what happens when you run `just` with no recipe)
 # update BUILD files & build
 build: gazelle
   bazel build //...
@@ -43,8 +41,13 @@ bazel-style mode="fix":
 
 # stand up kind development cluster
 kind-up:
-  kind create cluster --name snake-dev --kubeconfig kind-kubeconfig.yaml
+  if kind get clusters | grep "snake-dev"; then echo "snake-dev cluster already created"; else kind create cluster --name snake-dev --kubeconfig `pwd`/kind-kubeconfig.yaml; fi
 
 # tear down kind development cluster
 kind-down:
   if kind get clusters | grep "snake-dev"; then kind delete cluster --name snake-dev; else echo "No snake-dev cluster to delete"; fi
+
+# run all manifest generation targets
+manifests:
+  bazel build $(bazel query "kind(sh_binary, attr('generator_name', 'gen_manifests', //...))")
+
