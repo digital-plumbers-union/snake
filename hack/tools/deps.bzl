@@ -5,6 +5,28 @@ def install():
     install_bazel_tools()
     install_kustomize()
     install_just()
+    install_kubectl()
+
+def install_kubectl():
+    """Installs kubectl
+
+    Installed via http_file instead of tools.go because kubectl repository is
+    managed in a non-standard way.
+    """
+    http_file(
+        name = "kubectl_linux",
+        downloaded_file_path = "kubectl",
+        executable = True,
+        sha256 = "7729c6612bec76badc7926a79b26e0d9b06cc312af46dbb80ea7416d1fce0b36",
+        urls = ["https://storage.googleapis.com/kubernetes-release/release/v1.14.10/bin/linux/amd64/kubectl"],
+    )
+    http_file(
+        name = "kubectl_osx",
+        downloaded_file_path = "kubectl",
+        executable = True,
+        sha256 = "43d2c24eafb2ef09a6ac77c2b99070668e83edaa325a16a362e304ba578fdc48",
+        urls = ["https://storage.googleapis.com/kubernetes-release/release/v1.14.10/bin/darwin/amd64/kubectl"],
+    )
 
 def install_bazel_tools():
     """Install additional tools related to Bazel

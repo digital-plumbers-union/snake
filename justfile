@@ -39,9 +39,16 @@ fix:
 bazel-style mode="fix":
   if test -e bin/buildifier; then bin/buildifier --mode {{mode}} -r `pwd`; else bazel run //hack/tools:buildifier -- --mode {{mode}} -r `pwd`; fi
 
-# stand up kind development cluster
+# stand up kind development cluster and install pre-reqs
 kind-up:
-  if kind get clusters | grep "snake-dev"; then echo "snake-dev cluster already created"; else kind create cluster --name snake-dev --kubeconfig `pwd`/kind-kubeconfig.yaml; fi
+  #!/usr/bin/env sh
+  if kind get clusters | grep "snake-dev"; then
+    echo "snake-dev cluster already created"
+  else
+    kind create cluster --name snake-dev --kubeconfig `pwd`/kind-kubeconfig.yaml
+    # install pre-reqs that we dont want to install every time we refresh our manifests
+    kubectl apply -f hack/cert-manager.yaml
+  fi
 
 # tear down kind development cluster
 kind-down:
@@ -49,5 +56,17 @@ kind-down:
 
 # run all manifest generation targets
 manifests:
-  bazel build $(bazel query "kind(sh_binary, attr('generator_name', 'gen_manifests', //...))")
+  #!/usr/bin/env sh
+  GENTARGETS=$(bazel query "kind(sh_binary, attr('generator_name', 'gen_manifests', //...))")
+  for target in "${GENTARGETS[@]}"
+  do
+    bazel run "$target"
+  done
 
+# installs manifests for all components to active kubectl context
+install: manifests
+  kustomize build scheduler/config | kubectl apply -f -
+
+# uninstalls manifests
+uninstall:
+  kustomize build scheduler/config | kubectl delete -f -

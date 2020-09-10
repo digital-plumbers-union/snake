@@ -1,6 +1,18 @@
 package(default_visibility = ["//visibility:public"])
 
 genrule(
+    name = "fetch_kubectl",
+    srcs = select({
+        ":darwin": ["@kubectl_osx//file"],
+        ":k8": ["@kubectl_linux//file"],
+    }),
+    outs = ["kubectl"],
+    cmd = "cp $(SRCS) $@",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
     name = "fetch_buildifier",
     srcs = select({
         ":darwin": ["@buildifier_osx//file"],

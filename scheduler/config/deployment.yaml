@@ -15,11 +15,13 @@ spec:
       labels:
         app.kubernetes.io/name: snake-scheduler
     spec:
+      serviceAccountName: snake-scheduler
       containers:
         - args:
             - --enable-leader-election
-          image: controller:latest
+          image: dpush/snake-scheduler:latest
           name: snake-scheduler
+          imagePullPolicy: Always
           resources:
             limits:
               cpu: 100m
