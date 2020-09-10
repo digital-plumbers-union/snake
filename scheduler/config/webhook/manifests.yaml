@@ -1,0 +1,27 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-v1beta1-pipelinerun
+  failurePolicy: Fail
+  name: scheduler.snake.dpu.sh
+  rules:
+  - apiGroups:
+    - tekton.dev
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pipelineruns
+  sideEffects: Some
