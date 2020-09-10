@@ -42,15 +42,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	buildNumber, err = initializeBuildNumber(mgr.GetClient(), namespace)
-	if err != nil {
-		entryLog.Error(err, "Failed to initialize the build number")
-		os.Exit(1)
-	}
-	if buildNumber == 0 {
+	cmExists, existingBuildNumber := configMapExists(mgr.GetAPIReader(), namespace)
+
+	if !cmExists {
+		buildNumber, err = initializeBuildNumber(mgr.GetClient(), namespace)
+		if err != nil {
+			entryLog.Error(err, "Failed to initialize the build number")
+			os.Exit(1)
+		}
 		entryLog.Info("Could not find the build number ConfigMap. Created the ConfigMap instead")
 	}
-	entryLog.Info("Initialized build number: ", buildNumber)
+	buildNumber = existingBuildNumber
+	entryLog.Info("Initialized build number: ", "buildNumber", buildNumber)
 
 	// Setup webhooks
 	entryLog.Info("setting up webhook server")
@@ -66,28 +69,29 @@ func main() {
 	}
 }
 
-func initializeBuildNumber(client client.Client, namespace string) (int, error) {
-	// Fetch the ConfigMap from the cache
+func configMapExists(client client.Reader, namespace string) (bool, int) {
 	cm := &corev1.ConfigMap{}
-	err := client.Get(context.Background(), types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: namespace}, cm)
-
-	if err != nil {
-		// configMap not found, creating it
-		configData := make(map[string]string)
-		configData[constants.BuildNumberKey] = "0"
-		newCm := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      constants.BuildNumberConfigMap,
-				Namespace: namespace,
-			},
-			Data: configData,
-		}
-		if err := client.Create(context.Background(), newCm); err != nil {
-			return 0, err
-		}
-		return strconv.Atoi(configData[constants.BuildNumberKey])
+	if err := client.Get(context.Background(), types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: namespace}, cm); err != nil {
+		log.Log.Info("Configmap doesn't exist", "cm", constants.BuildNumberConfigMap)
+		return false, 0
 	}
+	buildNumber, _ := strconv.Atoi(cm.Data[constants.BuildNumberKey])
+	return true, buildNumber
+}
 
-	// otherwise we found the configmap, attempt to parse the build number
-	return strconv.Atoi(cm.Data[constants.BuildNumberKey])
+func initializeBuildNumber(client client.Client, namespace string) (int, error) {
+
+	configData := make(map[string]string)
+	configData[constants.BuildNumberKey] = "0"
+	newCm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      constants.BuildNumberConfigMap,
+			Namespace: namespace,
+		},
+		Data: configData,
+	}
+	if err := client.Create(context.Background(), newCm); err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(configData[constants.BuildNumberKey])
 }
