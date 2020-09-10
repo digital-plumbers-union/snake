@@ -28,7 +28,7 @@ func (r *reconcileConfigMap) Reconcile(ctx context.Context, request reconcile.Re
 
 	// Fetch the ConfigMap from the cache
 	cm := &corev1.ConfigMap{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "snake-build-number", Namespace: request.Namespace}, cm)
+	err := r.client.Get(ctx, types.NamespacedName{Name: "snake-build-number", Namespace: request.Namespace}, cm)
 
 	if err != nil {
 		log.Info("Could not find ConfigMap snake-build-number. Creating the ConfigMap instead")
