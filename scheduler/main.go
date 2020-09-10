@@ -51,8 +51,10 @@ func main() {
 			os.Exit(1)
 		}
 		entryLog.Info("Could not find the build number ConfigMap. Created the ConfigMap instead")
+	} else {
+		buildNumber = existingBuildNumber
 	}
-	buildNumber = existingBuildNumber
+
 	entryLog.Info("Initialized build number: ", "buildNumber", buildNumber)
 
 	// Setup webhooks
