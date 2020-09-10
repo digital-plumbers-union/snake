@@ -79,3 +79,5 @@ tags
 bazel-*
 .dev-cache-bazelrc
 .ci-cache-bazelrc
+# local repository tools
+bin/

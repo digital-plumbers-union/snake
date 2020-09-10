@@ -4,6 +4,7 @@ language: java
 
 before_install:
   # Install Bazel
+  # TODO: this should be using Bazelisk or Docker or something...
   - OS=linux
   - ARCH=x86_64
   - V=2.2.0
@@ -16,7 +17,11 @@ before_install:
   - ./install.sh --user
   - rm -f install.sh
 
+install:
+  - hack/tools/install.sh
+
 script:
-  - bazel run //:buildifier-check
+  # dont use just recipes for build/test to avoid running gazelle in CI
   - bazel build --config=ci //...
   - bazel test --config=ci //...
+  - bin/just check

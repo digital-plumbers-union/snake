@@ -4,6 +4,7 @@ def install():
     install_kubebuilder()
     install_bazel_tools()
     install_kustomize()
+    install_just()
 
 def install_bazel_tools():
     """Install additional tools related to Bazel
@@ -114,3 +115,31 @@ filegroup(
         urls = ["https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.5.4/kustomize_v3.5.4_darwin_amd64.tar.gz"],
     )
 
+def install_just():
+    """Installs just, a Make alternative."""
+    http_archive(
+        name = "just_linux",
+        build_file_content = """
+package(default_visibility = ["//visibility:public"])
+filegroup(
+  name = "file",
+  srcs = ["just"],
+  visibility = ["//visibility:public"]
+)
+""",
+        sha256 = "e6c8b074a1eedf6be5c5f6d2eaf8648c540ab5746817805264dd39692bcdc4e2",
+        urls = ["https://github.com/casey/just/releases/download/v0.5.8/just-v0.5.8-x86_64-unknown-linux-musl.tar.gz"],
+    )
+    http_archive(
+        name = "just_osx",
+        build_file_content = """
+package(default_visibility = ["//visibility:public"])
+filegroup(
+  name = "file",
+  srcs = ["just"],
+  visibility = ["//visibility:public"]
+)
+""",
+        sha256 = "d57e9c5636102f863d1f9b93dc218c59960b1a870421e27aa2aada0eaace5b62",
+        urls = ["https://github.com/casey/just/releases/download/v0.5.8/just-v0.5.8-x86_64-apple-darwin.tar.gz"],
+    )

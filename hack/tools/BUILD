@@ -52,6 +52,18 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+genrule(
+    name = "fetch_just",
+    srcs = select({
+        ":darwin": ["@just_osx//:file"],
+        ":k8": ["@just_linux//:file"],
+    }),
+    outs = ["just"],
+    cmd = "cp $(SRCS) $@",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
 # boilerplate for handling linux vs OS versions of binary tools
 
 config_setting(

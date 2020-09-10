@@ -16,6 +16,9 @@
 # dependency management recipes
 ################################################################################
 
+setup:
+  hack/tools/install.sh
+
 # NOTE: first command is default command
 # (i.e., what happens when you run `just` with no recipe)
 # update BUILD files & build
@@ -45,8 +48,12 @@ update-go-deps:
 
 # run basic formatting + linting check against code
 check:
-  bazel run //:buildifier-check
+  just bazel-style check
 
 # run formatting/style updates that can be automated
 fix:
-  bazel run //:buildifier
+  just bazel-style
+
+# uses buildifier to format.  pass mode=check to check without fixing
+bazel-style mode="fix":
+  if test -e bin/buildifier; then bin/buildifier --mode {{mode}} -r `pwd`; else bazel run //hack/tools:buildifier -- --mode {{mode}} -r `pwd`; fi

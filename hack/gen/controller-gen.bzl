@@ -9,16 +9,16 @@ def gen_manifests(pkg_name, role_name = "manager-role", name = "gen_manifests"):
     role_name is the name for the generated RBAC role
     """
     native.sh_binary(
-      name = name,
-      srcs = ["//hack/gen:gen-manifests.sh"],
-      args = [
-          "$(location %s)" % GO,
-          "$(location %s)" % CONTROLLER_GEN,
-          pkg_name,
-          role_name
-      ],
-      data = [
-          GO,
-          CONTROLLER_GEN,
-      ],
+        name = name,
+        srcs = ["//hack/gen:gen-manifests.sh"],
+        args = [
+            "$(location %s)" % GO,
+            "$(location %s)" % CONTROLLER_GEN,
+            pkg_name,
+            role_name,
+        ],
+        data = [
+            GO,
+            CONTROLLER_GEN,
+        ],
     )
