@@ -10,8 +10,6 @@ clean: kind-down
 # cleans workspace, reinstalls tools
 refresh: clean setup
 
-# NOTE: first command is default command
-# (i.e., what happens when you run `just` with no recipe)
 # update BUILD files & build
 build: gazelle
   bazel build //...
