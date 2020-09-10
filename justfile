@@ -35,7 +35,7 @@ gazelle:
 
 # runs as container
 run-container:
-  bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //cmd:container
+  bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //scheduler:container
 
 # publish container to docker hub
 publish-container:
@@ -44,7 +44,7 @@ publish-container:
 # update external go deps in bazel
 update-go-deps:
   go mod tidy
-  bazel run //:gazelle -- update-repos -from_file=go.mod -prune=true -to_macro deps.bzl%go --build_file_generation=on --build_file_proto_mode=disable_global
+  bazel run //:gazelle -- update-repos -from_file=go.mod -prune=true --build_file_generation=on --build_file_proto_mode=disable_global
 
 # run basic formatting + linting check against code
 check:
