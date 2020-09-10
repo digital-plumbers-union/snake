@@ -81,3 +81,5 @@ bazel-*
 .ci-cache-bazelrc
 # local repository tools
 bin/
+# kind-cluster kubeconfig
+kind-kubeconfig.yaml

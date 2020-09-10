@@ -15,5 +15,5 @@ $($install/buildozer $tools:buildozer)
 $($install/just $tools:just)
 $($install/kustomize $tools:kustomize)
 $($install/kubebuilder $tools:kubebuilder)
-
+$($install/kind @io_k8s_sigs_kind//:kind)
 

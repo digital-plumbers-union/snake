@@ -1,23 +1,14 @@
-################################################################################
-# variables
-################################################################################
-
-# Project Variables
-# Use `env_var` as much as possible to leverage `.env` as single source of truth
-
-# commit := `git rev-parse HEAD`
-# branch := `git rev-parse --abbrev-ref HEAD`
-
-################################################################################
-# commands
-################################################################################
-
-################################################################################
-# dependency management recipes
-################################################################################
-
+# installs required tooling for this repository, ran by default if no recipe is provided
 setup:
   hack/tools/install.sh
+
+# cleans workspace
+clean:
+  bazel clean --expunge
+  rm -rf bin/
+
+# cleans workspace, deletes clusters,
+refresh: clean setup kind-down
 
 # NOTE: first command is default command
 # (i.e., what happens when you run `just` with no recipe)
@@ -32,14 +23,6 @@ test: gazelle
 # update BUILD files
 gazelle:
   bazel run //:gazelle
-
-# runs as container
-run-container:
-  bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //scheduler:container
-
-# publish container to docker hub
-publish-container:
-  bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //cmd:push-container
 
 # update external go deps in bazel
 update-go-deps:
@@ -57,3 +40,11 @@ fix:
 # uses buildifier to format.  pass mode=check to check without fixing
 bazel-style mode="fix":
   if test -e bin/buildifier; then bin/buildifier --mode {{mode}} -r `pwd`; else bazel run //hack/tools:buildifier -- --mode {{mode}} -r `pwd`; fi
+
+# stand up kind development cluster
+kind-up:
+  kind create cluster --name snake-dev --kubeconfig kind-kubeconfig.yaml
+
+# tear down kind development cluster
+kind-down:
+  if kind get clusters | grep "snake-dev"; then kind delete cluster --name snake-dev; else echo "No snake-dev cluster to delete"; fi

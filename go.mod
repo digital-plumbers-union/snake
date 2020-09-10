@@ -10,6 +10,7 @@ require (
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	sigs.k8s.io/controller-runtime v0.5.10
 	sigs.k8s.io/controller-tools v0.4.0
+	sigs.k8s.io/kind v0.8.1
 )
 
 // pin to 0.17.6 for compatibility with Tekton

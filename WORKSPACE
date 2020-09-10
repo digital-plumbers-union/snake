@@ -5121,8 +5121,8 @@ go_repository(
     build_file_generation = "on",
     build_file_proto_mode = "disable_global",
     importpath = "gopkg.in/yaml.v3",
-    sum = "h1:B0J02caTR6tpSJozBJyiAzT6CtBzjclw4pgm9gg8Ys0=",
-    version = "v3.0.0-20190905181640-827449938966",
+    sum = "h1:Xe2gvTZUJpsvOWUnvmL/tmhVBZUmHSvLbMjRj6NUUKo=",
+    version = "v3.0.0-20200121175148-a6ecf24a6d71",
 )
 
 go_repository(
@@ -5856,4 +5856,31 @@ go_repository(
     importpath = "gomodules.xyz/jsonpatch/v2",
     sum = "h1:Phva6wqu+xR//Njw6iorylFFgn/z547tw5Ne3HZPQ+k=",
     version = "v2.1.0",
+)
+
+go_repository(
+    name = "com_github_alessio_shellescape",
+    build_file_generation = "on",
+    build_file_proto_mode = "disable_global",
+    importpath = "github.com/alessio/shellescape",
+    sum = "h1:8LnL+ncxhWT2TR00dfJRT25JWWrhkMZXneHVWnetDZg=",
+    version = "v1.2.2",
+)
+
+go_repository(
+    name = "com_github_evanphx_json_patch_v5",
+    build_file_generation = "on",
+    build_file_proto_mode = "disable_global",
+    importpath = "github.com/evanphx/json-patch/v5",
+    sum = "h1:dKTrUeykyQwKb/kx7Z+4ukDs6l+4L41HqG1XHnhX7WE=",
+    version = "v5.0.0",
+)
+
+go_repository(
+    name = "io_k8s_sigs_kind",
+    build_file_generation = "on",
+    build_file_proto_mode = "disable_global",
+    importpath = "sigs.k8s.io/kind",
+    sum = "h1:9wsEbEtMQV9QObaqS/T4VxBeXXPtu+qM9sFMqgO/90o=",
+    version = "v0.8.1",
 )
