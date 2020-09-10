@@ -1,0 +1,7 @@
+namespace: snake-scheduler
+
+resources:
+- webhook
+- rbac
+- deployment.yaml
+- configmap.yaml

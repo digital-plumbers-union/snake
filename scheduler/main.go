@@ -16,6 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update;watch
+
 func init() {
 	log.SetLogger(zap.New())
 }
@@ -31,9 +33,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Setup a new controller to reconcile ReplicaSets
+	// Setup a new controller to reconcile our Build Number ConfigMap
 	entryLog.Info("Setting up controller")
-	c, err := controller.New("buildID-controller", mgr, controller.Options{
+	c, err := controller.New("buildnum-controller", mgr, controller.Options{
 		Reconciler: &reconcileConfigMap{client: mgr.GetClient()},
 	})
 	if err != nil {

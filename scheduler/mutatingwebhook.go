@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	constants "github.com/digital-plumbers-union/snake/scheduler/pkg/constants"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,23 +35,23 @@ func (a *pipelineRunAnnotator) Handle(ctx context.Context, req admission.Request
 
 	// return Allowed early if we dont find the annotation telling us to generate a
 	// build number
-	if !(metav1.HasAnnotation(run.ObjectMeta, "snake.blockheads.info/generate-build-number")) {
-		return admission.Allowed(fmt.Sprintf("Annotation %s not found", "snake.blockheads.info/generate-build-number"))
+	if !(metav1.HasAnnotation(run.ObjectMeta, constants.AssignBuildNumberAnnotation)) {
+		return admission.Allowed(fmt.Sprintf("Annotation %s not found", constants.AssignBuildNumberAnnotation))
 	}
 
-	// increment build, convert to string, and annotate it
+	// increment build, convert to string
 	a.BuildNumber = a.BuildNumber + 1
-	// make sure labels exist
-	run.Labels[BuildNumber] = strconv.Itoa(a.BuildNumber)
+	// TODO: make sure labels exist (?)
+	// add the incremented build number as a label
+	run.Labels[constants.BuildNumberLabel] = strconv.Itoa(a.BuildNumber)
 	// extract build from configMap and annotate it
 	buildNumberConfigMap := &corev1.ConfigMap{}
-	if err := a.Client.Get(ctx, types.NamespacedName{Name: "snake-build-number", Namespace: run.ObjectMeta.Namespace}, buildNumberConfigMap); err != nil {
+	if err := a.Client.Get(ctx, types.NamespacedName{Name: constants.BuildNumberConfigMap, Namespace: run.ObjectMeta.Namespace}, buildNumberConfigMap); err != nil {
 		// configMap not found error
 		return admission.Errored(1, err)
 	}
 
-	// assumption: the configMap key name is "buildNumber"
-	buildNumber := buildNumberConfigMap.Data["buildNumber"]
+	buildNumber := buildNumberConfigMap.Data[constants.BuildNumberKey]
 	// update the annotation
 	run.Annotations["snake.blockheads.info/build-number"] = buildNumber
 	// update the env variables
