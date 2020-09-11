@@ -37,6 +37,8 @@ go_binary(
 
 go_image(
     name = "container",
+    goarch = "amd64",
+    goos = "linux",
     embed = [":go_default_library"],
 )
 

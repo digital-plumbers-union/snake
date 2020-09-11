@@ -9,4 +9,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: snake-scheduler
-    namespace: $(SERVICE_NAMESPACE)
+    namespace: snake-scheduler

@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:path=/mutate-v1beta1-pipelinerun,mutating=true,failurePolicy=fail,groups=tekton.dev,resources=pipelineruns,verbs=create,versions=v1beta1,name=scheduler.snake.dpu.sh,sideEffects=some
+// +kubebuilder:webhook:path=/mutate-v1beta1-pipelinerun,mutating=true,failurePolicy=fail,groups=tekton.dev,resources=pipelineruns,verbs=create,versions=v1beta1,name=scheduler.snake.dpu.sh,sideEffects=Some
 
 // pipelineRunAnnotator annotates PipelineRuns
 type pipelineRunAnnotator struct {
