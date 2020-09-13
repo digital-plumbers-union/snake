@@ -48,6 +48,7 @@ kind-up:
     kind create cluster --name snake-dev --kubeconfig `pwd`/kind-kubeconfig.yaml
     # install pre-reqs that we dont want to install every time we refresh our manifests
     kubectl apply -f hack/cert-manager.yaml
+    kubectl apply -f hack/tekton-0.16.0.yaml
   fi
 
 # tear down kind development cluster
